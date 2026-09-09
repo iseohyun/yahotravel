@@ -1,0 +1,56 @@
+# .github/workflows/deploy.yml
+name: Deploy React App to GitHub Pages
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Production Bundle
+        env:
+          VITE_ADMIN_EMAIL: "iseohyun@hanmail.net"
+          VITE_COMPANY_TEL: "055-736-6068"
+          VITE_KAKAO_CHAT_URL: "https://pf.kakao.com/_ETRrX/chat"
+          VITE_WEB3FORMS_KEY: "8ffc27ff-bbd8-4d15-949b-e0a99e11cded"
+        run: npm run build
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # 반드시 빌드 산출물인 dist 폴더를 지정해야 합니다!
+          path: './dist'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
